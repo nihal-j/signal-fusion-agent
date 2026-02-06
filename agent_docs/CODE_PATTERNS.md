@@ -1,93 +1,95 @@
-2. code_patterns.md
-Markdown
-# code_patterns.md: Engineering Standards for Topological Alpha
+code_patterns.md: Engineering Standards for Mosaic Aegis
+1. Core Principles
+Asynchronous Everywhere: Use async/await for all I/O-bound tasks (Voice WebSockets, MCP tool calls, DB queries) to prevent event loop blocking.
 
-This document establishes the coding standards, design patterns, and performance guidelines for the **Topological Alpha** project. Given the project's reliance on high-performance math and machine learning, strict adherence to these patterns is required for maintainability and execution speed.
+Zero-Trust Tooling: Secrets must be injected at the Proxy level. Agents should never handle raw API keys or tokens in their context.
 
-## 1. Core Principles
+Fail-Safe Defaults: Every tool execution must have a timeout and a structured error response that the agent can use to trigger the Discovery Meta-Tool.
 
-* **Vectorization First:** Avoid explicit Python `for` loops for numerical data. Use `NumPy`, `Polars`, or `PyTorch` tensors.
-* **Type Safety:** All Python code must use type hints (`typing` module) to facilitate AI debugging and static analysis.
-* **Immutability in Strategy:** Dataframes representing historical prices should be treated as immutable once loaded to prevent accidental data leakage.
-* **Mathematical Transparency:** Code should contain comments referencing the specific LaTeX equations from the PRD/Tech Design.
+Contextual Integrity: All RAG-retrieved context must be validated for timestamp relevance to prevent the agent from acting on stale user preferences.
 
-## 2. Performance Patterns
-
-### 2.1. Numba JIT for Information Theory
-Transfer Entropy and PIN likelihood estimations are computationally expensive. Use `@njit` for these bottlenecks.
-
-```python
-from numba import njit
-import numpy as np
-
-@njit
-def fast_entropy_sum(p_joint, p_marginal):
-    """Optimized summation for Transfer Entropy calculation."""
-    result = 0.0
-    for i in range(p_joint.shape[0]):
-        if p_joint[i] > 0 and p_marginal[i] > 0:
-            result += p_joint[i] * np.log2(p_joint[i] / p_marginal[i])
-    return result
-2.2. Polars for Pipeline Efficiency
-Use Polars for the initial data cleaning and feature engineering before passing data to GUDHI or PyTorch.
+2. Performance Patterns
+2.1. Azure Voice Live WebSocket Bridge
+Maintaining sub-200ms latency is critical. Use non-blocking queues for audio chunk buffering.
 
 Python
-import polars as pl
+import asyncio
+from azure.ai.voicelive import VoiceLiveClient
 
-def compute_log_returns(df: pl.DataFrame) -> pl.DataFrame:
-    return df.with_columns([
-        (pl.col("close").log().diff()).alias("log_return")
-    ]).drop_nulls()
-3. Machine Learning Patterns (RL)
-3.1. The Reward Wrapper
-Always encapsulate the reward logic in a separate class to allow for independent unit testing of the Differential Sharpe Ratio.
+async def audio_bridge(client_ws, azure_client: VoiceLiveClient):
+    """
+    Optimized bridge between iOS audio stream and Azure Voice Live.
+    """
+    async for chunk in client_ws:
+        if chunk.is_audio:
+            # Non-blocking forward to Azure
+            await azure_client.send_audio(chunk.data)
+        
+        # Concurrent check for Azure responses/tool calls
+        response = await azure_client.receive_event()
+        if response.type == "tool_call":
+            asyncio.create_task(handle_mcp_call(response))
+2.2. uvx for Dynamic Discovery
+When a tool is discovered via Awesome-MCP, use uvx for ephemeral, high-speed execution without bloating the main environment.
 
 Python
-class DifferentialSharpeReward:
-    def __init__(self, kappa: float = 0.1):
-        self.kappa = kappa
-        self.eta = 0.0
-        self.sigma2 = 1.0
+import subprocess
 
-    def update(self, r_t: float) -> float:
-        # Implementation of recursive moment updates
-        # Returns the reward signal for the PPO agent
-        ...
-3.2. State Normalization
-Market data varies in scale. All inputs to the Meta-Learner must be Z-score normalized using a rolling window to prevent gradient explosion.
+def dynamic_mcp_run(server_name: str, args: list):
+    """
+    Executes a newly discovered MCP server in an isolated env.
+    """
+    command = ["uvx", server_name] + args
+    return subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+3. Agentic & RAG Patterns
+3.1. The "Memory Augmentor" Wrapper
+Always wrap agent intents with a RAG retrieval step to inject user-specific behavioral history.
+
+Python
+class ContextAugmentor:
+    def __init__(self, vector_db):
+        self.db = vector_db
+
+    async def enrich_prompt(self, user_id: str, current_query: str) -> str:
+        # Retrieve top-k behavioral preferences from ChromaDB
+        past_preferences = await self.db.query(user_id, current_query, n=3)
+        return f"User Preferences: {past_preferences}\nQuery: {current_query}"
+3.2. Structured Tool Outputs
+All MCP tools must return a standardized JSON schema so the Conway Decision Engine can parse confidence scores reliably.
 
 4. Architecture Patterns
-4.1. Observer Pattern for Regime Changes
-The TDA_Governor acts as a Subject. The AlphaEngine and MetaLearner are Observers that scale their activity based on the topological contraction signal.
+4.1. The Secure Gateway Proxy
+The Dedalus SDK acts as the root. All tool calls from Azure are intercepted here for credential injection.
 
-4.2. Strategy Factory
-Use a Factory pattern to initialize different "Alpha Snipers" (OU, Momentum, Mean Reversion) based on the regime detected.
+4.2. Strategy Factory for Fallbacks
+Use a Factory pattern to decide between "Local Tool Execution" and "Registry Discovery" when an intent is received.
 
 Python
-class StrategyFactory:
+class IntentResolver:
     @staticmethod
-    def get_strategy(regime: str):
-        if regime == "CONTRACTION":
-            return DefensiveStrategy()
-        return AggressiveOUStrategy()
+    def get_handler(intent: str, available_tools: list):
+        if intent in available_tools:
+            return LocalExecutionHandler()
+        return AwesomeMCPDiscoveryHandler()
 5. Error Handling & Safety
-5.1. The "Anti-Explosion" Guard
-Every execution service must include a decorator that checks for NaN or Inf values in tensors before sending orders to the broker.
+5.1. The "Human-in-the-Loop" Decorator
+High-stakes tools (Payments, Deletion, Security) must be wrapped in an approval gate.
 
 Python
-def validate_tensor(func):
-    def wrapper(*args, **kwargs):
-        result = func(*args, **kwargs)
-        if np.isnan(result).any():
-            raise ValueError("NaN detected in strategy output")
-        return result
+def requires_approval(func):
+    async def wrapper(*args, **kwargs):
+        # Trigger Siri/Agentuity approval UI
+        approved = await request_user_confirmation(func.__name__)
+        if not approved:
+            return "Action cancelled by user."
+        return await func(*args, **kwargs)
     return wrapper
-5.2. Data Leakage Prevention
-Ensure that all rolling window calculations use closed='left' or equivalent settings to ensure the current timestamp's data isn't used to predict its own outcome.
+5.2. Semantic VAD Guard
+Ensure the backend ignores audio input if the "Agent Speaking" state is active, unless an "Interrupt" threshold is met.
 
 6. Documentation Standards
-Docstrings: Use Google Style docstrings.
+Docstrings: Use Google Style docstrings for all FastAPI endpoints.
 
-Math: Standalone math logic must include a link to the corresponding section in tech_design.md.
+Traceability: Every tool call must log its trace_id to TimescaleDB for post-mortem debugging in Agentuity.
 
-Logging: Use structured logging (JSON) via loguru or structlog for easy ingestion into Grafana.
+Logging: Use loguru with JSON formatting for cloud-native observability.

@@ -1,61 +1,58 @@
-1. AGENTS.md
-Markdown
-# AGENTS.md - Master Plan for Topological Alpha
+🎯 Project Overview
+App: Mosaic Aegis Goal: A high-fidelity, voice-first agentic bridge connecting Apple's ecosystem (Siri) to the infinite tool capabilities of the Model Context Protocol (MCP), featuring dynamic tool discovery and self-improving capabilities. Stack: Python 3.13, FastAPI, Azure AI Voice Live API, Dedalus SDK, TimescaleDB, ChromaDB, Docker. Current Phase: Phase 1 - Foundation & The Voice Pipe
 
-## 🎯 Project Overview
+🧠 How I Should Think
+Prioritize Latency: In a voice-first application, responsiveness is paramount. Optimize WebSocket handling and tool execution paths to maintain sub-200ms latency.
 
-**App:** Topological Alpha
-**Goal:** A hierarchical quantitative trading engine integrating Topological Data Analysis (TDA), Information Theory, and Reinforcement Learning (RL) for robust alpha generation.
-**Stack:** Python 3.13, PyTorch (PPO), GUDHI (TDA), TimescaleDB, Redis, Polars.
-**Current Phase:** Phase 1 - Foundation & TDA Governor
+Zero-Trust by Default: Recognize the security sensitivity of API keys and personal data. Use the Dedalus Secure Vault pattern to ensure the agent never "sees" raw credentials.
 
-## 🧠 How I Should Think
+Graceful Fallbacks: If a requested tool is missing, trigger the "Discovery" meta-tool to search the Awesome-MCP registry rather than failing the user request.
 
-1.  **Understand Intent First**: Recognize that this is a high-stakes financial application; accuracy and risk management take precedence over speed.
-2.  **Ask If Unsure**: If the mathematical parameters (e.g., Ornstein-Uhlenbeck mean-reversion thresholds or Vietoris-Rips epsilon values) are unclear, ask for clarification before implementing.
-3.  **Plan Before Coding**: For complex modules like Persistent Homology or Transfer Entropy, outline the mathematical logic and vectorization strategy before writing a single line of Python.
-4.  **Test After Changes**: Rigorously backtest every module. A "working" code snippet is useless if it introduces look-ahead bias or fails to handle non-stationary data.
-5.  **Explain Trade-offs**: Always mention the computational cost vs. accuracy trade-offs, especially when choosing between `GUDHI` (simplicial complexes) and simpler statistical approximations.
+Context-Aware Reasoning: Leverage RAG (ChromaDB) to recall user history and preferences (e.g., "I prefer UberXL") before executing any tool to ensure personalized alignment.
 
-## 📁 Context Files
+Safety-First Autonomy: Always implement a manual override for high-stakes actions. When in doubt about a decision's impact, pause and ask the user for confirmation via voice.
 
+📁 Context Files
 Refer to these for details (load only when needed):
 
-* `agent_docs/tech_design.md`: Full architecture, math specs, and DB schema.
-* `agent_docs/product_requirements.md`: The high-level vision and "Why it Wins" rationale.
-* `agent_docs/rl_reward_specs.md`: Detailed breakdown of the Differential Sharpe Ratio and PPO logic.
+agent_docs/tech_design.md: Full architecture, Azure Voice Live integration, and secure proxy logic.
 
-## 🔄 Current State (Update This!)
+agent_docs/product_requirements.md: High-level vision, user stories, and "self-improving" rationale.
 
-**Last Updated:** February 6, 2026
-**Working On:** Initialization of the TDA Governor and Vietoris-Rips complex construction.
-**Recently Completed:** System architecture design and tech stack finalization.
-**Blocked By:** None.
+agent_docs/code_patterns.md: Standards for WebSocket loops, MCP tool definitions, and RAG implementation.
 
-## 🚀 Roadmap
+🔄 Current State (Update This!)
+Last Updated: February 6, 2026 Working On: Initialization of the FastAPI backend and Azure Voice Live WebSocket integration. Recently Completed: System architecture design and tech stack finalization. Blocked By: None.
 
-### Phase 1: Foundation & TDA Governor
+🚀 Roadmap
+Phase 1: Foundation & The Voice Pipe
+[ ] Initialize Python 3.13 project structure with uv.
 
-* [ ] Initialize Python project structure with Poetry/Conda.
-* [ ] Implement `TDA_Governor` module (Betti-1 persistence calculation).
-* [ ] Connect TimescaleDB and load historical OHLCV data for backtesting.
-* [ ] Create "Regime Shift" triggers based on topological contraction.
+[ ] Set up FastAPI backend with Azure Voice Live WebSocket bridge.
 
-### Phase 2: Intelligence & Alpha Engine
+[ ] Implement Siri Shortcut for audio capture and metadata forwarding.
 
-* [ ] Implement `CausalGraph` (Transfer Entropy) between asset pairs.
-* [ ] Setup `PIN` (Probability of Informed Trading) likelihood estimation.
-* [ ] Build `OU_Sniper` for cointegrated mean-reversion trading.
+[ ] Connect Dedalus MCP Gateway with "Core" tools (Calendar, Uber).
 
-### Phase 3: Meta-Learner (RL)
+Phase 2: Discovery & Intelligence
+[ ] Implement registry_search meta-tool for Awesome-MCP lookup.
 
-* [ ] Build Gymnasium environment for the meta-allocator.
-* [ ] Implement PPO agent with Differential Sharpe reward function.
-* [ ] Execute walk-forward optimization and adversarial noise testing.
+[ ] Connect TimescaleDB for event logging and ChromaDB for preference-based RAG.
 
-## ⚠️ What NOT To Do
+[ ] Build "Self-Healing" logic for dynamic MCP tool loading and session updates.
 
-* **Do NOT** introduce look-ahead bias (using future data to calculate current TDA persistence).
-* **Do NOT** ignore transaction costs or slippage in reward function calculations.
-* **Do NOT** modify the `TDA_Governor` logic without validating it against historical crash regimes (e.g., 2008, 2020).
-* **Do NOT** hard-code stock symbols; use a dynamic universe filter.
+Phase 3: Experience & Polish
+[ ] Integrate Agentuity for real-time thought-trace visualization and debugging.
+
+[ ] Implement "Semantic VAD" for natural conversation pacing.
+
+[ ] Execute adversarial testing (e.g., prompt injection) to validate the Secure Vault.
+
+⚠️ What NOT To Do
+Do NOT pass raw API keys or secrets into the LLM's context window.
+
+Do NOT allow the agent to install third-party MCP servers without a security check or user notification.
+
+Do NOT hard-code tool schemas; use the Dedalus runner to dynamically aggregate MCP capabilities.
+
+Do NOT ignore Semantic VAD; ensure the agent does not interrupt the user mid-sentence.
